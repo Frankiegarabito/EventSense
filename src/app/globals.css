@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  /* Base surface scale — deep, cool, near-black */
+  --color-bg: oklch(0.14 0.015 260);
+  --color-surface: oklch(0.18 0.018 260);
+  --color-surface-2: oklch(0.22 0.02 260);
+  --color-surface-3: oklch(0.27 0.022 260);
+  --color-border: oklch(0.32 0.018 260);
+  --color-border-strong: oklch(0.42 0.022 260);
+
+  /* Text */
+  --color-fg: oklch(0.97 0.005 260);
+  --color-fg-muted: oklch(0.72 0.012 260);
+  --color-fg-dim: oklch(0.55 0.012 260);
+
+  /* Brand accent — electric cyan */
+  --color-accent: oklch(0.82 0.16 215);
+  --color-accent-glow: oklch(0.82 0.16 215 / 0.45);
+
+  /* Status — pulse ring */
+  --color-trending: oklch(0.86 0.22 145);      /* neon green */
+  --color-trending-glow: oklch(0.86 0.22 145 / 0.55);
+  --color-stagnant: oklch(0.82 0.17 75);       /* amber */
+  --color-stagnant-glow: oklch(0.82 0.17 75 / 0.45);
+  --color-low: oklch(0.68 0.22 25);            /* red */
+  --color-low-glow: oklch(0.68 0.22 25 / 0.5);
+
+  /* Sentiment */
+  --color-pos: oklch(0.86 0.22 145);
+  --color-neu: oklch(0.72 0.012 260);
+  --color-neg: oklch(0.68 0.22 25);
+
+  /* Type scale */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "SF Pro Display",
+    "Segoe UI", Roboto, Inter, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Animation */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01", "ss03";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle ambient grid for the dashboard backdrop */
+  body {
+    background-image:
+      radial-gradient(
+        circle at 15% 8%,
+        oklch(0.82 0.16 215 / 0.06),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 85% 92%,
+        oklch(0.86 0.22 145 / 0.05),
+        transparent 50%
+      );
+    background-attachment: fixed;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .glow-trending {
+    filter: drop-shadow(0 0 12px var(--color-trending-glow));
+  }
+  .glow-accent {
+    filter: drop-shadow(0 0 10px var(--color-accent-glow));
+  }
+  .glow-low {
+    filter: drop-shadow(0 0 10px var(--color-low-glow));
+  }
+
+  /* High-density grid scrollbars */
+  .scroll-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 3px;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* Pulse animation — used by trending event rings */
+@keyframes pulse-ring {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.04);
+  }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 2.4s var(--ease-out-quart) infinite;
+}
