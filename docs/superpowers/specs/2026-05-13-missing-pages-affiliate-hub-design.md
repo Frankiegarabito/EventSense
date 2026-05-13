@@ -102,7 +102,7 @@ Generate platform-specific social media captions with the user's affiliate/disco
 ### Layout (two-panel)
 
 **Left panel — controls (300px fixed)**
-1. Event picker — list of events from `/api/events`, showing city, pulse dot, days-until, social noise score
+1. Event picker — list of events from `/api/events`, showing city, pulse dot, days-until, social noise score. Events with `PulseStatus === "low"` show an amber alert chip ("Needs boost").
 2. Platform selector — 6-button grid: Instagram · TikTok · X · Facebook · Reddit · Forum
 3. Tone chips (multi-select): Hype 🔥 · Informative · Hook-first · Chill
 4. Generate button (full-width, accent color)
@@ -113,7 +113,9 @@ Generate platform-specific social media captions with the user's affiliate/disco
   - Variant label + tag chips (HOOK, HYPE, COMMUNITY, LONG-FORM)
   - Caption body — affiliate code rendered in accent color
   - Footer: char count · Copy button (copies plain text to clipboard)
-- Reddit/Forum variant includes a subreddit suggestion block below the card
+- **Where to Post panel** (below captions): Claude returns a ranked list of specific places to post this content — e.g. named subreddits, Facebook groups by city, forum threads, event discovery sites. Each entry includes a reason ("high car culture activity", "city-specific, relevant audience").
+- **"What's happening this weekend" targeting**: For Reddit and Forum platforms, Claude also generates reply-style copy for existing "what to do this weekend" or "any car meets near [city]?" type threads — shorter, conversational, drops the affiliate code naturally.
+- **Low-activity article prompt**: When the selected event has `PulseStatus === "low"`, a banner appears above the captions: *"This event needs a boost — generate a long-form article?"* Clicking it switches the output to a full article (400–600 words) suitable for submission to local blogs, event listing sites (Do512, Funcheap, Eventbrite editorial), or car culture publications. Article includes SEO-friendly structure: headline, intro, what to expect, affiliate link with code, closing CTA.
 
 **Top bar**
 - Page title "Affiliate Hub"
@@ -128,6 +130,7 @@ Generate platform-specific social media captions with the user's affiliate/disco
   platform: Platform           // "instagram" | "tiktok" | "x" | "facebook" | "reddit" | "forum"
   tones: Tone[]                // ["hype", "hook-first", "community", "chill"]
   affiliateCode: string
+  mode: "captions" | "article" // article mode triggered by low-pulse banner
 }
 ```
 
@@ -141,12 +144,19 @@ Generate platform-specific social media captions with the user's affiliate/disco
     charCount: number
     tags: string[]             // ["HOOK", "HYPE"] etc.
   }>
-  subreddits?: string[]        // only for reddit platform
+  wherToPost: Array<{
+    name: string               // e.g. "r/FloridaCars", "Clean Culture FB Group - Miami"
+    type: "subreddit" | "facebook_group" | "forum" | "event_site"
+    reason: string             // why this is a good fit
+    threadHint?: string        // e.g. "search 'what to do this weekend' and reply"
+  }>
+  weekendReply?: string        // short reply-style copy for existing threads (reddit/forum only)
+  article?: string             // only present when mode === "article"
 }
 ```
 
 **Prompt design:**
-- System: Car culture expert + social media copywriter. Knows Clean Culture is a car show brand. Knows each platform's norms (TikTok: hook in first 3 words, short; Reddit: no hashtags, sounds organic; X: under 280 chars).
+- System: Car culture expert + social media copywriter + local SEO writer. Knows Clean Culture is a car show brand. Knows each platform's norms (TikTok: hook in first 3 words, short; Reddit: no hashtags, sounds organic; X: under 280 chars). Knows major car culture communities by region.
 - User: Event details (city, venue, date, days until, social noise score, pulse status) + platform + tones + affiliate code.
 - Asks for exactly 3 variants as JSON.
 - Model: `claude-haiku-4-5-20251001` (fast, low cost per generation).
@@ -174,9 +184,17 @@ export interface GeneratedCaption {
   charCount: number
   tags: string[]
 }
+export interface WhereToPost {
+  name: string
+  type: "subreddit" | "facebook_group" | "forum" | "event_site"
+  reason: string
+  threadHint?: string
+}
 export interface GenerateCaptionResponse {
   captions: GeneratedCaption[]
-  subreddits?: string[]
+  whereToPost: WhereToPost[]
+  weekendReply?: string
+  article?: string
 }
 ```
 
