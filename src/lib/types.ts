@@ -147,3 +147,35 @@ function avg(xs: number[]): number {
   if (xs.length === 0) return 0;
   return xs.reduce((a, b) => a + b, 0) / xs.length;
 }
+
+export type Platform =
+  | "instagram"
+  | "tiktok"
+  | "x"
+  | "facebook"
+  | "reddit"
+  | "forum"
+
+export type Tone = "hype" | "hook-first" | "community" | "chill"
+
+export interface GeneratedCaption {
+  variant: string
+  text: string
+  hashtags: string[]
+  charCount: number
+  tags: string[]
+}
+
+export interface WhereToPost {
+  name: string
+  type: "subreddit" | "facebook_group" | "forum" | "event_site"
+  reason: string
+  threadHint?: string
+}
+
+export interface GenerateCaptionResponse {
+  captions: GeneratedCaption[]
+  whereToPost: WhereToPost[]
+  weekendReply?: string
+  article?: string
+}
