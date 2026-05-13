@@ -161,9 +161,9 @@ export type Tone = "hype" | "hook-first" | "community" | "chill"
 export interface GeneratedCaption {
   variant: string
   text: string
-  hashtags: string[]
+  hashtags?: string[]
   charCount: number
-  tags: string[]
+  tags?: string[]
 }
 
 export interface WhereToPost {

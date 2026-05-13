@@ -37,13 +37,15 @@ export function AffiliateHub({ affiliateCode }: { affiliateCode: string }) {
   const [result, setResult] = useState<GenerateCaptionResponse | null>(null);
   const [mode, setMode] = useState<"captions" | "article">("captions");
   const [copied, setCopied] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: fetchEvents });
 
   function toggleTone(tone: Tone) {
-    setTones((prev) =>
-      prev.includes(tone) ? prev.filter((t) => t !== tone) : [...prev, tone]
-    );
+    setTones((prev) => {
+      if (prev.includes(tone)) return prev.length > 1 ? prev.filter((t) => t !== tone) : prev;
+      return [...prev, tone];
+    });
   }
 
   async function generate(activeMode: "captions" | "article") {
@@ -51,22 +53,30 @@ export function AffiliateHub({ affiliateCode }: { affiliateCode: string }) {
     setMode(activeMode);
     setIsGenerating(true);
     setResult(null);
+    setGenerateError(null);
     try {
       const res = await fetch("/api/generate-caption", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event: selectedEvent, platform, tones, affiliateCode, mode: activeMode }),
       });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       setResult(await res.json());
+    } catch (e) {
+      setGenerateError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   }
 
-  function copy(text: string, id: string) {
-    navigator.clipboard.writeText(text);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 2000);
+  async function copy(text: string, id: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      // clipboard unavailable or permission denied — do not show "Copied!"
+    }
   }
 
   const isLow = selectedEvent ? derivePulseStatus(selectedEvent) === "low" : false;
@@ -193,8 +203,15 @@ export function AffiliateHub({ affiliateCode }: { affiliateCode: string }) {
           </div>
         )}
 
+        {/* Error state */}
+        {generateError && !isGenerating && (
+          <div className="rounded-[10px] border border-[--color-neg]/40 bg-[--color-neg]/5 px-4 py-3">
+            <p className="text-[11px] text-[--color-neg]">⚠ {generateError}</p>
+          </div>
+        )}
+
         {/* Empty state */}
-        {!result && !isGenerating && (
+        {!result && !isGenerating && !generateError && (
           <div className="flex items-center justify-center h-64 text-[--color-fg-dim] text-sm">
             {selectedEvent ? "Hit Generate to create captions" : "Select an event to get started"}
           </div>
@@ -228,7 +245,7 @@ export function AffiliateHub({ affiliateCode }: { affiliateCode: string }) {
                 </div>
                 <div className="px-4 py-3 text-[12px] leading-relaxed">
                   <span className="whitespace-pre-wrap">{cap.text}</span>
-                  {cap.hashtags?.length > 0 && (
+                  {cap.hashtags && cap.hashtags.length > 0 && (
                     <div className="mt-2 text-[11px] text-[--color-fg-muted]">
                       {cap.hashtags.join(" ")}
                     </div>
@@ -238,7 +255,7 @@ export function AffiliateHub({ affiliateCode }: { affiliateCode: string }) {
                   <span className="text-[9px] text-[--color-fg-dim]">{cap.charCount} chars</span>
                   <button
                     onClick={() => copy(
-                      cap.text + (cap.hashtags?.length ? "\n" + cap.hashtags.join(" ") : ""),
+                      cap.text + (cap.hashtags?.length ? "\n" + cap.hashtags?.join(" ") : ""),
                       `cap-${i}`
                     )}
                     className={cn(
