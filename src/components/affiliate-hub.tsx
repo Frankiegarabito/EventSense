@@ -98,7 +98,7 @@ export function AffiliateHub({ affiliateCode }: { affiliateCode: string }) {
                     <span className="block text-[9px] text-[--color-fg-dim]">
                       {new Date(e.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       {status === "low" && (
-                        <span className="ml-1.5 text-[--color-stagnant]">· Needs boost</span>
+                        <span className="ml-1.5 inline-flex items-center rounded px-1.5 py-0.5 text-[8px] font-bold bg-[--color-stagnant]/20 text-[--color-stagnant]">Needs boost</span>
                       )}
                     </span>
                   </span>
